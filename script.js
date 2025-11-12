@@ -44,21 +44,23 @@ function handleOperationInput(event) {
     // if i already have an operator, do calculation
     // else, store operator for use after the input of second number 
     if (operator) {
-        prevNum = operate(prevNum, operator, parseInt(currentNum));
-        currentNum = resetNum();
+        prevNum = operate(prevNum, operator, parseFloat(currentNum));
     } else {
-        prevNum = parseInt(currentNum);
-        currentNum = resetNum();
+        prevNum = parseFloat(currentNum); 
     }
 
-    // if operator is of class calculate (e.g. "="), set operator to null
-    if (event.target.classList.contains("button-calculate")) {
-        operator = null;
-        currentNum = prevNum;
-        prevNum = resetNum()
-    } else {
-        operator = event.target.textContent;
-    }
+    currentNum = resetNum();
+    operator = event.target.textContent;
+}
+
+function handleCalculateButton(event) {
+    // do pending calculation
+    handleOperationInput(event);
+
+    // Reset calculator to inital state, store result for next calculation
+    operator = null;
+    currentNum = prevNum;
+    prevNum = resetNum()
 }
 
 function clear(event) {
@@ -67,7 +69,7 @@ function clear(event) {
     currentNum = resetNum();
 }
 
-function resetNum() {return '';}
+function resetNum() { return ''; }
 
 const visorDisplay = document.querySelector('#visor');
 const input = document.querySelectorAll('button');
@@ -83,7 +85,10 @@ input.forEach(element => {
     else if (element.getAttribute("class") === "button-number") {
         element.addEventListener('click', handleNumberInput)
     }
-    else if (element.classList.contains("button-operation")) {
+    else if (element.getAttribute("class") === "button-operation") {
         element.addEventListener('click', handleOperationInput);
-    } 
+    }
+    else if (element.classList.contains("button-calculate")) {
+        element.addEventListener('click', handleCalculateButton)
+    }
 });
