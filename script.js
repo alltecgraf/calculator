@@ -23,12 +23,13 @@ function operate(num1, operator, num2) {
             break;
         case '/':
             if (num2 === 0) {
-                alert("You shouldn't be doing that, dummy!");
-                return null;
+                errorDetected = true;
+
             }
             result = divide(num1, num2);
             break;
         default: alert("OPERATOR ERROR");
+            return clear();
     }
 
     result = Math.round(result * 10 ** 10) / 10 ** 10
@@ -37,48 +38,62 @@ function operate(num1, operator, num2) {
     return result;
 }
 
-function handleNumberInput(event) {
+function handleNumberInput(value) {
     // Only update display to empty after the input of a new number
     if (!currentNum) {
         visorDisplay.textContent = '';
     }
 
-    let input = event.target.textContent;
-
-    if (input === '.' && currentNum.includes('.')) {
+    if (value === '.' && currentNum.includes('.')) {
         return;
     }
 
-    currentNum += input;
+    currentNum += value;
     visorDisplay.textContent = currentNum;
 }
 
-function handleNumberRemove(event) {
+function handleNumberRemove() {
     if (currentNum) {
         currentNum = currentNum.substring(0, currentNum.length - 1);
         visorDisplay.textContent = currentNum;
     }
 }
 
-function handleOperationInput(event) {
+function handleOperationInput(value) {
     // if i already have an operator, do calculation
     // else, store operator for use after the input of second number 
+    if (operator === '=' && currentNum === '') {
+        clear();
+        throw new Error("No numbers to do the operation");
+    }
+
+
+
     if (operator) {
         prevNum = operate(prevNum, operator, parseFloat(currentNum));
-        if (prevNum === null) {
-            return clear();
+        if (errorDetected) {
+            clear();
+            errorDetected = false;
+            throw new Error("Unable to divide number by zero")
         }
     } else {
         prevNum = parseFloat(currentNum);
+        if (isNaN(prevNum)) {
+            clear();
+            throw new Error("No numbers to do the operation");
+        }
     }
 
+
     currentNum = setEmpty();
-    operator = event.target.textContent;
+    operator = value;
+
+
 }
 
-function handleCalculateButton(event) {
+function handleCalculateButton(value) {
     // do pending calculation
-    handleOperationInput(event);
+    handleOperationInput(value);
 
     // Reset calculator to inital state, store result for next calculation
     operator = setEmpty();
@@ -93,28 +108,80 @@ function clear(event) {
     currentNum = setEmpty();
 }
 
-
 const visorDisplay = document.querySelector('#visor');
 const input = document.querySelectorAll('button');
 
 let prevNum = setEmpty();
 let operator = setEmpty();
 let currentNum = setEmpty();
+let errorDetected = false;
 
 input.forEach(element => {
-    if (element.getAttribute("class") === "button-reset") {
-        element.addEventListener('click', clear);
-    }
-    else if (element.getAttribute("class") === "button-remove") {
+    if (element.getAttribute("class") === "button-remove") {
         element.addEventListener('click', handleNumberRemove);
     }
-    else if (element.getAttribute("class") === "button-number") {
-        element.addEventListener('click', handleNumberInput)
+    else if (element.getAttribute("class") === "button-number"
+        || element.getAttribute("class") === "button-operation") {
+        element.addEventListener('click', inputToValue)
     }
-    else if (element.getAttribute("class") === "button-operation") {
-        element.addEventListener('click', handleOperationInput);
+    else if (element.getAttribute("class") === "button-reset") {
+        element.addEventListener('click', clear);
     }
-    else if (element.classList.contains("button-calculate")) {
+    else if (element.getAttribute("id") === "=") {
         element.addEventListener('click', handleCalculateButton)
     }
 });
+
+document.addEventListener('keydown', inputToValue)
+
+function inputToValue(event) {
+    const regexCaptureNumber = /([0-9.])/g; // capturing numbers from interval "[0-9]" (inclusive) and the "." operator
+    const regexCaptureOperation = /([\-*+/=])/g; // capturing operators "+" "-" "*" "/" and "=" 
+    let inputClass = null;
+    let input = null;
+
+    if (event.type === "keydown") {
+        input = event.key
+    } else {
+        inputClass = event.target.className;
+        input = event.target.id;
+    }
+
+    if (regexCaptureNumber.test(input) || event.target.className === "button-number") {
+        if (input === '.') {
+            handleNumberInput(input);
+        } else {
+            let number = parseFloat(input);
+
+            if (isNaN(number)) {
+                throw new Error("Invalid ID type");
+            }
+            handleNumberInput(number);
+        }
+    }
+    else if (regexCaptureOperation.test(input) || inputClass === "button-operation") {
+        handleOperationInput(input)
+    }
+    else if (input === "Enter") {
+        handleOperationInput('=');
+    }
+    else if (input === "Backspace") {
+        handleNumberRemove();
+    }
+    else if (input === "Escape") {
+        clear();
+    }
+}
+
+/* tests:
+- somar dois números pequenos => gerar resultado exato                                                  OK! 
+- realizar um cálculo com as 4 operações básicas => gerar resultado exato                               OK!
+- dividir um número muito pequeno com um número muito grande => gerar resultado com 10 casas decimais   OK!
+- dividir por 0 => throw error no console para não dividir por 0 e chamar o clear;                      OK!
+- chamar o operador + - / ou * sem número => throw error no console e chamar o clear                    OK!
+- colocar o mesmo operador duas vezes => manter o operador sem aviso 
+- colocar um operador e seguido de outro operador (diferente do primeiro) => manter o segundo operador
+- apertar o REMOVE depois de clicar no igual => chamar o clear()
+- apertar o = sem input algum => nada acontecer
+- apertar o = apenas um número => manter o mesmo número como resultado
+ */

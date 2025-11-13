@@ -10,8 +10,8 @@ body {
 
 #calculator-body {
     flex-direction: column;
-    height: 50vh;
-    width: 30vw;
+    height: 300px;
+    width: 370px;
     background-color: rgb(75, 70, 71);
     margin: auto;
     border-radius: 5%;
@@ -20,7 +20,7 @@ body {
 #visor {
     background-color: cornsilk;
     padding: 15px;
-    width: 25vw;
+    width: 300px;
     height: 15px;
     text-align: end;
     margin: 30px auto 0 auto;
