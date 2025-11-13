@@ -20,10 +20,16 @@ function operate(num1, operator, num2) {
             result = multiply(num1, num2);
             break;
         case '/':
+            if (num2 === 0) {
+                alert("You shouldn't be doing that, dummy!");
+                return null;
+            }
             result = divide(num1, num2);
             break;
         default: alert("OPERATOR ERROR");
     }
+
+    result = Math.round(result * 10 ** 10) / 10 ** 10
 
     visorDisplay.textContent = result;
     return result;
@@ -45,8 +51,11 @@ function handleOperationInput(event) {
     // else, store operator for use after the input of second number 
     if (operator) {
         prevNum = operate(prevNum, operator, parseFloat(currentNum));
+        if (prevNum === null) {
+            return clear();
+        }
     } else {
-        prevNum = parseFloat(currentNum); 
+        prevNum = parseFloat(currentNum);
     }
 
     currentNum = resetNum();
@@ -65,7 +74,8 @@ function handleCalculateButton(event) {
 
 function clear(event) {
     visorDisplay.textContent = '';
-    prevNum;
+    prevNum = resetNum();
+    operator = null;
     currentNum = resetNum();
 }
 
@@ -74,8 +84,8 @@ function resetNum() { return ''; }
 const visorDisplay = document.querySelector('#visor');
 const input = document.querySelectorAll('button');
 
-let prevNum;
-let operator;
+let prevNum = resetNum();
+let operator = null;
 let currentNum = resetNum();
 
 input.forEach(element => {
