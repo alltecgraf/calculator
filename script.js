@@ -6,6 +6,8 @@ function multiply(a, b) { return a * b; }
 
 function divide(a, b) { return a / b; }
 
+function setEmpty() { return ''; }
+
 function operate(num1, operator, num2) {
     let result = 0;
 
@@ -42,8 +44,20 @@ function handleNumberInput(event) {
     }
 
     let input = event.target.textContent;
+
+    if (input === '.' && currentNum.includes('.')) {
+        return;
+    }
+
     currentNum += input;
     visorDisplay.textContent = currentNum;
+}
+
+function handleNumberRemove(event) {
+    if (currentNum) {
+        currentNum = currentNum.substring(0, currentNum.length - 1);
+        visorDisplay.textContent = currentNum;
+    }
 }
 
 function handleOperationInput(event) {
@@ -58,7 +72,7 @@ function handleOperationInput(event) {
         prevNum = parseFloat(currentNum);
     }
 
-    currentNum = resetNum();
+    currentNum = setEmpty();
     operator = event.target.textContent;
 }
 
@@ -67,30 +81,32 @@ function handleCalculateButton(event) {
     handleOperationInput(event);
 
     // Reset calculator to inital state, store result for next calculation
-    operator = null;
+    operator = setEmpty();
     currentNum = prevNum;
-    prevNum = resetNum()
+    prevNum = setEmpty();
 }
 
 function clear(event) {
     visorDisplay.textContent = '';
-    prevNum = resetNum();
-    operator = null;
-    currentNum = resetNum();
+    prevNum = setEmpty();
+    operator = setEmpty();
+    currentNum = setEmpty();
 }
 
-function resetNum() { return ''; }
 
 const visorDisplay = document.querySelector('#visor');
 const input = document.querySelectorAll('button');
 
-let prevNum = resetNum();
-let operator = null;
-let currentNum = resetNum();
+let prevNum = setEmpty();
+let operator = setEmpty();
+let currentNum = setEmpty();
 
 input.forEach(element => {
     if (element.getAttribute("class") === "button-reset") {
         element.addEventListener('click', clear);
+    }
+    else if (element.getAttribute("class") === "button-remove") {
+        element.addEventListener('click', handleNumberRemove);
     }
     else if (element.getAttribute("class") === "button-number") {
         element.addEventListener('click', handleNumberInput)
