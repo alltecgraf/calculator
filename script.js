@@ -202,8 +202,7 @@ function logTest(testName, operation, result, expected, expectedBehavior, verdic
 
 function validateReliability() {
     if (validateAlreadyPressed) {
-        const logDivList = document.querySelectorAll('class', 'log-text')
-        logDivList.forEach(element => element.removeChild())
+        throw new Error("Reliability already validated!")
     }
 
     // existe forma melhor de inicializar todas dessa forma?
@@ -343,6 +342,8 @@ function validateReliability() {
     validateOperateOverCalc = (currentNum === expectedCalc);
     logTest("Operation over result", `${a} + ${b} + ${c}`, currentNum, expectedCalc, "Do new operation directly after calculation result", validateOperateOverCalc);
     resetTest();
+
+    validateAlreadyPressed = true;
 }
 
 const visorDisplay = document.querySelector('#visor');
@@ -379,5 +380,5 @@ document.addEventListener('keydown', inputToValue);
 validateButton = document.querySelector(".validate-reliability");
 
 validateButton.addEventListener('click', validateReliability);
-let validateAlreadyPressed = false
+let validateAlreadyPressed = false;
 const testContainer = document.querySelector(".reliability-container");
