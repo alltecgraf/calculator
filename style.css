@@ -56,7 +56,10 @@ body {
     justify-content: space-around;
 }
 
-.button-operation {
+.button-operation,
+.button-remove,
+.button-calculate,
+.button-reset {
     width: 50px;
 }
 
@@ -64,6 +67,6 @@ body {
     display: flex;
     flex-wrap: wrap;
     height: 300px;
-    width: 500px;
+    width: 700px;
 }
 

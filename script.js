@@ -179,14 +179,17 @@ function resetTest() {
     previousInput = null;
 }
 
-function logTest(testName, result, expected, verdict) {
+function logTest(testName, operation, result, expected, expectedBehavior, verdict) {
     const logDiv = document.createElement("div");
     logDiv.setAttribute('class', 'log-text')
     logDiv.style.whiteSpace = 'pre-wrap';
-    logDiv.style.width = '200px';
+    logDiv.style.width = '300px';
+    logDiv.style.margin = '0 5px';
     logDiv.textContent = `\n${testName}`
+        + `\nOperation Order: ${operation}`
         + `\nResult: ${result}`
         + `\nExpected: ${expected}`
+        + `\nExpected Behavior: ${expectedBehavior}`
         + `\nTest Approved: `;
 
     const verdictSpan = document.createElement('span');
@@ -216,42 +219,46 @@ function validateReliability() {
     let validateOneInputCalc = false;
     let validateOperateOverCalc = false;
 
-    let numberA = (Math.random() * 100);
-    let numberB = (Math.random() * 100);
-
+    let numberA = 142;
+    let numberB = 21.42365;
     // somar dois números pequenos => gerar resultado exato
-    let calculatorSumResult = operate(numberA, '+', numberB)
-    let roundedSumResult = Math.round((numberA + numberB) * 10 ** 10) / 10 ** 10
 
-    validateSmallSum = (calculatorSumResult === roundedSumResult);
-    logTest("Sum of Random Numbers", calculatorSumResult, roundedSumResult, validateSmallSum);
+    let calculatorSumResult = operate(numberA, '+', numberB)
+    let sumResult = numberA + numberB;
+
+    validateSmallSum = (calculatorSumResult === sumResult);
+    logTest("Sum of floats", `${numberA} + ${numberB}`, calculatorSumResult, sumResult, "Return exact sum", validateSmallSum);
     resetTest();
 
-    // realizar um cálculo com as 4 operações básicas => gerar resultado exato         
-    let resultOne = operate(5, '+', 35); // partial result: 40 
-    let resultTwo = operate(resultOne, '-', 43); // partial result: -3 
-    let resultThree = operate(resultTwo, '/', 24); // partial result: -0.125
+    // realizar um cálculo com as 4 operações básicas => gerar resultado exato  
+    let a = 5;
+    let b = 35;
+    let c = 43;
+    let d = 24;       
+    let resultOne = operate(a, '+', b); // partial result: 40 
+    let resultTwo = operate(resultOne, '-', c); // partial result: -3 
+    let resultThree = operate(resultTwo, '/', d); // partial result: -0.125
     let resultFour = operate(resultThree, '*', resultThree); // final result: 0.015625
     let finalResult = 0.015625;
     validateAllOperations = (resultFour === finalResult);
-    logTest("Use All Operations", resultFour, finalResult, validateAllOperations);
+    logTest("Use All Operations", `${a} + ${b} - ${c} / ${d} * ${resultThree}`, resultFour, finalResult, "Return exact calculation", validateAllOperations);
     resetTest();
 
     // dividir um número muito pequeno com um número muito grande => gerar resultado com 10 casas decimais  => o operate é o responsável por arredondar o número
-    let randomCalcDivision = (operate(numberA, '/', 9));
-    let randomDivision = Math.round((numberA / 9) * 10 ** 10) / (10 ** 10)
-    validateDivRounding = (randomCalcDivision === randomDivision);
-    logTest("Rounding in random division", randomCalcDivision, randomDivision, validateDivRounding);
+    let numberCalcDivision = (operate(numberA, '/', numberB));
+    let numberDivision = Math.round((numberA / numberB) * 10 ** 10) / (10 ** 10)
+    validateDivRounding = (numberCalcDivision === numberDivision);
+    logTest("Rounding in random division", `${numberA} / ${numberB}`, numberCalcDivision, numberDivision, "Return a rounded division with 10 decimal places", validateDivRounding);
     resetTest();
 
     // dividir por 0 => throw error no console para não dividir por 0 e chamar o clear;           
     try {
-        (operate(3, '/', 0));
+        (operate(numberA, '/', 0));
     }
     catch (e) {
         validateDivByZero = true;
     }
-    logTest("Division by zero", "See Verdict", "Throw error on Console and call Clear function", validateDivByZero);
+    logTest("Division by zero", `${numberA} / 0`, "See Verdict", "true", "Throw error on Console and call Clear function", validateDivByZero);
     resetTest();
 
     // chamar o operador + - / ou * sem número => throw error no console e chamar o clear               
@@ -260,7 +267,7 @@ function validateReliability() {
     } catch (e) {
         validateEmptyInputOperation = true;
     }
-    logTest("Call operator without input", "See Verdict", "Throw error on Console and call Clear function", validateEmptyInputOperation);
+    logTest("Call operator without input", '/', "N/A", "true", "Throw error on Console and call Clear function", validateEmptyInputOperation);
     resetTest();
 
     // colocar o mesmo operador duas vezes => nada acontecer e manter o mesmo operador e número já colocado   
@@ -268,30 +275,40 @@ function validateReliability() {
     handleOperationInput('+');
     previousInput = '+'; // precisei setar previous input por fazer parte do handling de inputs repetidos
     handleOperationInput('+');
-    validateRepeatOperation = ((operator === '+') && (!(TEST_clearWasCalled))); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
-    logTest("Call same operator twice", "See Verdict", "Keep operator", validateRepeatOperation);
+    handleNumberInput(numberB);
+    previousInput = numberB;
+    handleCalculateButton();
+    let sameOpResult = currentNum;
+    validateRepeatOperation = (sameOpResult === sumResult); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
+    logTest("Call same operator twice", `${numberA} + + ${numberB} = `, sameOpResult, sumResult, "Keep operator", validateRepeatOperation);
     resetTest();
 
     // colocar um operador seguido de outro operador (diferente do primeiro) => substituir o operador antigo pelo novo 
-    handleNumberInput(numberB);
+    handleNumberInput(numberA);
     handleOperationInput('+');
     previousInput = '+';
     handleOperationInput('-');
-    validateReplaceOperation = ((operator === '-') && (!(TEST_clearWasCalled))); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
-    logTest("Call different operators in succession", "See Verdict", "Keep last operator", validateReplaceOperation);
+    previousInput = '-';
+    handleNumberInput(numberB);
+    previousInput = numberB;
+    handleCalculateButton();
+    let replaceOpResult = currentNum;
+    let subtractNumbers = numberA - numberB;
+    validateReplaceOperation = (replaceOpResult === subtractNumbers); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
+    logTest("Call different operators in succession", `${numberA} + - ${numberB}`, replaceOpResult, subtractNumbers, "Keep last operator", validateReplaceOperation);
 
     resetTest();
 
     // apertar o REMOVE depois de clicar no igual => verificar se foi removido o último digito do resultado               
-    handleNumberInput(9);
+    handleNumberInput(a);
     handleOperationInput('+');
-    handleNumberInput(2);
+    handleNumberInput(b);
     handleCalculateButton();
     previousInput = '=';
     handleNumberRemove();
-    let expectedValue = 1; // removing last digit of 11
+    let expectedValue = Math.floor((a + b)/10); // removing last digit of 11
     validateDelAfterCalc = (currentNum === expectedValue);
-    logTest("Call RMV immediately after obtaining calcutation results", currentNum, expectedValue, validateDelAfterCalc);
+    logTest("Call RMV immediately after obtaining calculation results", `${a} + ${b} = RMV`, currentNum, expectedValue, "Remove last digit of result", validateDelAfterCalc);
     resetTest();
 
     // apertar o = sem input algum => nada acontecer visualmente e throw error no console        
@@ -300,32 +317,31 @@ function validateReliability() {
     } catch (e) {
         validateEmptyInputCalc = true;
     }
-    logTest("Call calculate with no input", "See Verdict", "Throw error on console", validateEmptyInputCalc);
+    logTest("Call calculate with no input", "=", "N/A", "N/A", "Throw error on console", validateEmptyInputCalc);
     resetTest();
 
     // apertar o = com apenas um input => manter o mesmo número como resultado          
-    handleNumberInput(9);
-    handleNumberInput(2);
+    handleNumberInput(a);
+    handleNumberInput(b);
     handleCalculateButton();
-    let expectedInput = 92;
+    let expectedInput = parseFloat(`${a}` + `${b}`);
     validateOneInputCalc = (currentNum === expectedInput);
-    logTest("Call calculate with only one number on input", validateOneInputCalc, expectedInput, validateOneInputCalc);
+    logTest("Calculate with only one input", `${a}${b} = `, currentNum, expectedInput, "Return same number as result", validateOneInputCalc);
     resetTest();
 
     // realizar alguma operação em cima de um resultado obtido => retornar o novo valor calculado
-    handleNumberInput(6);
+    handleNumberInput(a);
     handleOperationInput('+');
-    handleNumberInput(5);
+    handleNumberInput(b);
     handleCalculateButton();
     previousInput = '=';
     handleOperationInput('+');
-    handleNumberInput(4);
-    previousInput = 4;
+    handleNumberInput(c);
+    previousInput = c;
     handleCalculateButton();
-    let opAfterCalcResult = currentNum;
-    let expectedCalc = 6 + 5 + 4
-    validateOperateOverCalc = (opAfterCalcResult === expectedCalc);
-    logTest("Do new operation directly after calculation result", opAfterCalcResult, expectedCalc, validateOperateOverCalc);
+    let expectedCalc = a + b + c
+    validateOperateOverCalc = (currentNum === expectedCalc);
+    logTest("Operation over result", `${a} + ${b} + ${c}`, currentNum, expectedCalc, "Do new operation directly after calculation result", validateOperateOverCalc);
     resetTest();
 }
 
