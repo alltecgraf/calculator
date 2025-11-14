@@ -181,7 +181,9 @@ function resetTest() {
 
 function logTest(testName, result, expected, verdict) {
     const logDiv = document.createElement("div");
+    logDiv.setAttribute('class', 'log-text')
     logDiv.style.whiteSpace = 'pre-wrap';
+    logDiv.style.width = '200px';
     logDiv.textContent = `\n${testName}`
         + `\nResult: ${result}`
         + `\nExpected: ${expected}`
@@ -192,13 +194,15 @@ function logTest(testName, result, expected, verdict) {
     verdictSpan.style.color = (verdict ? "green" : "red");
 
     logDiv.appendChild(verdictSpan);
-
-    testContainer.appendChild(logDiv)
-
     testContainer.appendChild(logDiv);
 }
 
 function validateReliability() {
+    if (validateAlreadyPressed) {
+        const logDivList = document.querySelectorAll('class', 'log-text')
+        logDivList.forEach(element => element.removeChild())
+    }
+
     // existe forma melhor de inicializar todas dessa forma?
     let validateSmallSum = false;
     let validateAllOperations = false;
@@ -252,7 +256,7 @@ function validateReliability() {
 
     // chamar o operador + - / ou * sem número => throw error no console e chamar o clear               
     try {
-        operate(3, '/', 0);
+        handleOperationInput('/');
     } catch (e) {
         validateEmptyInputOperation = true;
     }
@@ -359,4 +363,5 @@ document.addEventListener('keydown', inputToValue);
 validateButton = document.querySelector(".validate-reliability");
 
 validateButton.addEventListener('click', validateReliability);
+let validateAlreadyPressed = false
 const testContainer = document.querySelector(".reliability-container");
