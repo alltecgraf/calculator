@@ -186,26 +186,26 @@ function resetTest() {
 
 function validateReliability() {
     // existe forma melhor de inicializar todas dessa forma?
-    let validateA = false;
-    let validateB = false;
-    let validateC = false;
-    let validateD = false;
-    let validateE = false;
-    let validateF = false;
-    let validateG = false;
-    let validateH = false;
-    let validateI = false;
-    let validateJ = false;
-    let validateK = false;
+    let validateSmallSum = false;
+    let validateAllOperations = false;
+    let validateDivRounding = false;
+    let validateDivByZero = false;
+    let validateEmptyInputOperation = false;
+    let validateRepeatOperation = false;
+    let validateReplaceOperation = false;
+    let validateDelAfterCalc = false;
+    let validateEmptyInputCalc = false;
+    let validateOneInputCalc = false;
+    let validateOperateOverCalc = false;
 
     let numberA = (Math.random() * 100);
     let numberB = (Math.random() * 100);
 
     // somar dois números pequenos => gerar resultado exato
-    validateASumResult = operate(numberA, '+', numberB)
+    let calculatorSumResult = operate(numberA, '+', numberB)
     let roundedSumResult = Math.round((numberA + numberB) * 10 ** 10) / 10 ** 10
 
-    validateA = (validateASumResult === roundedSumResult);
+    validateSmallSum = (calculatorSumResult === roundedSumResult);
     resetTest();
 
     // realizar um cálculo com as 4 operações básicas => gerar resultado exato         
@@ -213,11 +213,11 @@ function validateReliability() {
     let resultTwo = operate(resultOne, '-', 43); // partial result: -3 
     let resultThree = operate(resultTwo, '/', 24); // partial result: -0.125
     let resultFour = operate(resultThree, '*', resultThree); // final result: 0.015625
-    validateB = (resultFour === 0.015625);
+    validateAllOperations = (resultFour === 0.015625);
     resetTest();
 
     // dividir um número muito pequeno com um número muito grande => gerar resultado com 10 casas decimais  => o operate é o responsável por arredondar o número
-    validateC = ((operate(3, '/', 9)).countDecimals() === 10);
+    validateDivRounding = ((operate(3, '/', 9)).countDecimals() === 10);
     resetTest();
 
     // dividir por 0 => throw error no console para não dividir por 0 e chamar o clear;           
@@ -225,7 +225,7 @@ function validateReliability() {
         (operate(3, '/', 0));
     }
     catch (e) {
-        validateD = true;
+        validateDivByZero = true;
     }
     resetTest();
 
@@ -233,7 +233,7 @@ function validateReliability() {
     try {
         operate(3, '/', 0);
     } catch (e) {
-        validateE = true;
+        validateEmptyInputOperation = true;
     }
     resetTest();
 
@@ -242,7 +242,7 @@ function validateReliability() {
     handleOperationInput('+');
     previousInput = '+'; // precisei setar previous input por fazer parte do handling de inputs repetidos
     handleOperationInput('+');
-    validateF = ((operator === '+') && (!(TEST_clearWasCalled))); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
+    validateRepeatOperation = ((operator === '+') && (!(TEST_clearWasCalled))); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
     resetTest();
 
     // colocar um operador seguido de outro operador (diferente do primeiro) => substituir o operador antigo pelo novo 
@@ -250,7 +250,7 @@ function validateReliability() {
     handleOperationInput('+');
     previousInput = '+';
     handleOperationInput('-');
-    validateG = ((operator === '-') && (!(TEST_clearWasCalled))); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
+    validateReplaceOperation = ((operator === '-') && (!(TEST_clearWasCalled))); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
     resetTest();
 
     // apertar o REMOVE depois de clicar no igual => verificar se foi removido o último digito do resultado               
@@ -259,14 +259,14 @@ function validateReliability() {
     handleCalculateButton();
     previousInput = '=';
     handleNumberRemove();
-    validateH = (currentNum === 9);
+    validateDelAfterCalc = (currentNum === 9);
     resetTest();
 
     // apertar o = sem input algum => nada acontecer visualmente e throw error no console        
     try {
         handleOperationInput('=')
     } catch (e) {
-        validateI = true;
+        validateEmptyInputCalc = true;
     }
     resetTest();
 
@@ -274,7 +274,7 @@ function validateReliability() {
     handleNumberInput(9);
     handleNumberInput(2);
     handleCalculateButton();
-    validateJ = (currentNum === 92);
+    validateOneInputCalc = (currentNum === 92);
     resetTest();
 
     // realizar alguma operação em cima de um resultado obtido => retornar o novo valor calculado
@@ -287,8 +287,8 @@ function validateReliability() {
     handleNumberInput(4);
     previousInput = 4;
     handleCalculateButton();
-    let validateKSumResult = currentNum;
-    validateK = (validateKSumResult === (6 + 5 + 4));
+    let multiOpSumResult = currentNum;
+    validateOperateOverCalc = (multiOpSumResult === (6 + 5 + 4));
     resetTest();
 }
 
