@@ -41,26 +41,26 @@ function operate(num1, operator, num2) {
     return result;
 }
 
-function handleNumberInput(value) {
+function handleNumberInput(inputValue) {
     // Only update display to empty after the input of a new number
     if (!currentNum) {
         visorDisplay.textContent = '';
     }
 
-    if (value === '.' && currentNum.includes('.')) {
+    // check if number is already a float
+    if ((inputValue === '.') && (currentNum % 1 != 0)) {
         return;
     }
 
-    currentNum += value;
+    let joiningArray = [currentNum, inputValue];
+
+    currentNum = joiningArray.join('');
     visorDisplay.textContent = currentNum;
 }
 
 function handleNumberRemove() {
-    if (previousInput === '=') {
-        clear();
-    }
-    else if (currentNum) {
-        currentNum = currentNum.substring(0, currentNum.length - 1);
+    if (currentNum) {
+        currentNum = Math.floor(currentNum / 10);
         visorDisplay.textContent = currentNum;
     }
 }
@@ -130,8 +130,8 @@ let operator = setEmpty();
 let currentNum = setEmpty();
 let errorDetected = false;
 let previousInput = null;
-const regexCaptureNumber = /([0-9.])/g; // capturing numbers from interval "[0-9]" (inclusive) and the "." operator
-const regexCaptureOperation = /([\-*+/])/g; // capturing operators "+" "-" "*" "/"
+const regexCaptureNumber = /[0-9]/; // capturing numbers from interval "[0-9]" (inclusive)
+const regexCaptureOperation = /([\-*+/])/; // capturing operators "+" "-" "*" "/"
 
 
 input.forEach(element => {
@@ -155,42 +155,46 @@ document.addEventListener('keydown', inputToValue)
 function inputToValue(event) {
     let inputClass = null;
     let input = null;
+    let inputStringToNumber = null;
 
     if (event.type === "keydown") {
-        input = event.key
+        input = event.key;
+        inputStringToNumber = parseInt(input);
     } else {
         inputClass = event.target.className;
         input = event.target.id;
+        inputStringToNumber = parseInt(input);
     }
 
-    if (regexCaptureNumber.test(input) || event.target.className === "button-number") {
-        if (input === '.') {
-            handleNumberInput(input);
-        } else {
-            let number = parseFloat(input);
-
-            if (isNaN(number)) {
+    if (regexCaptureNumber.test(inputStringToNumber) || inputClass === "button-number") {
+            if (isNaN(inputStringToNumber)) {
                 throw new Error("Input not a number");
             }
-            handleNumberInput(number);
-        }
+            handleNumberInput(inputStringToNumber);
+        
     }
     else if (regexCaptureOperation.test(input) || inputClass === "button-operation") {
         handleOperationInput(input);
     }
-    else if (inputClass = "button-calculate") {
-        handleOperationCalculate(input);
+    else if (inputClass === "button-calculate") {
+        handleCalculateButton(input);
+    } else {
+        switch (input) {
+            case '.':
+                handleNumberInput(input);
+            case "Enter":
+            case '=':
+                handleCalculateButton('=');
+                break;
+            case "Backspace":
+                handleNumberRemove();
+                break;
+            case "Escape":
+                clear();
+                break;
+            default: handleError("Input not defined");
+        }
     }
-    else if (input === "Enter") {
-        handleOperationCalculate('=');
-    }
-    else if (input === "Backspace") {
-        handleNumberRemove();
-    }
-    else if (input === "Escape") {
-        clear();
-    }
-
     previousInput = input;
 }
 
@@ -205,18 +209,5 @@ function inputToValue(event) {
 - apertar o REMOVE depois de clicar no igual => chamar o clear()                                                     OK!
 - apertar o = sem input algum => nada acontecer e throw error no console                                             OK!
 - apertar o = apenas um número => manter o mesmo número como resultado                                               OK!
-- realizar alguma operação em cima de um resultado obtido => retornar o novo valor calculado
-
-
-Boa tarde, @canal! Seguindo no projeto de calculadora, construí em conjunto com o Miguel uma série de testes que a calculadora deveria reproduzir de forma satisfatória, lidando com comportamentos adiversos (como divisões por 0, repetição de operadores,  cálculos com inputs faltantes, etc).
-
-Além disso, foram inclusas algumas novas funcionalidades, como:
-suporte a input pelo teclado;
-botão RMV, para remover um dígito do número sendo digitado;
-botão CLEAR para reiniciar a calculadora;
-botão de "." para operações com decimais.
-
-Segue vídeo demonstrativo! 
+- realizar alguma operação em cima de um resultado obtido => retornar o novo valor calculado                         OK!    
 */
-
-// chamar as funções de forma individual com os valores para ver se retorna o que é esperado
