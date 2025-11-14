@@ -8,11 +8,6 @@ function divide(a, b) { return a / b; }
 
 function setEmpty() { return ''; }
 
-function resetTest() {
-    clear();
-    TEST_clearWasCalled = false;
-}
-
 Number.prototype.countDecimals = function () {
     if (Math.floor(this.valueOf()) === this.valueOf()) return 0;
     return this.toString().split(".")[1].length || 0;
@@ -42,7 +37,7 @@ function operate(num1, operator, num2) {
             return;
     }
 
-    if (isNaN(result)) {
+    if (isNaN(result) || (errorDetected)) {
         handleError("Result was not a number");
     }
 
@@ -114,10 +109,10 @@ function handleOperationInput(value) {
     }
 }
 
-function handleCalculateButton(value) {
-    if (!(previousInput === value)) {
+function handleCalculateButton() {
+    if (!(previousInput === '=')) {
         // do pending calculation
-        handleOperationInput(value);
+        handleOperationInput('=');
 
         // Reset calculator to inital state, store result for next calculation
         operator = setEmpty();
@@ -133,6 +128,168 @@ function clear(event) {
     currentNum = setEmpty();
 
     clearWasCalled = true;
+}
+
+function inputToValue(event) {
+    let inputClass = null;
+    let input = null;
+    let inputStringToNumber = null;
+
+    if (event.type === "keydown") {
+        input = event.key;
+        inputStringToNumber = parseInt(input);
+    } else {
+        inputClass = event.target.className;
+        input = event.target.id;
+        inputStringToNumber = parseInt(input);
+    }
+
+    if (regexCaptureNumber.test(inputStringToNumber) || inputClass === "button-number") {
+        if (isNaN(inputStringToNumber)) {
+            throw new Error("Input not a number");
+        }
+        handleNumberInput(inputStringToNumber);
+
+    }
+    else if (regexCaptureOperation.test(input) || inputClass === "button-operation") {
+        handleOperationInput(input);
+    }
+    else if (inputClass === "button-calculate") {
+        handleCalculateButton();
+    } else {
+        switch (input) {
+            case '.':
+                handleNumberInput(input);
+                break;
+            case "Enter":
+            case '=':
+                handleCalculateButton();
+                break;
+            case "Backspace":
+                handleNumberRemove();
+                break;
+            case "Escape":
+                clear();
+                break;
+            default: handleError("Input not defined");
+        }
+    }
+    previousInput = input;
+}
+
+function resetTest() {
+    clear();
+    TEST_clearWasCalled = false;
+    errorDetected = false;
+    previousInput = null;
+}
+
+function validateReliability() {
+    // existe forma melhor de inicializar todas dessa forma?
+    let validateA = false;
+    let validateB = false;
+    let validateC = false;
+    let validateD = false;
+    let validateE = false;
+    let validateF = false;
+    let validateG = false;
+    let validateH = false;
+    let validateI = false;
+    let validateJ = false;
+    let validateK = false;
+
+    let numberA = (Math.random() * 100);
+    let numberB = (Math.random() * 100);
+
+    // somar dois números pequenos => gerar resultado exato
+    validateASumResult = operate(numberA, '+', numberB)
+    let roundedSumResult = Math.round((numberA + numberB) * 10 ** 10) / 10 ** 10
+
+    validateA = (validateASumResult === roundedSumResult);
+    resetTest();
+
+    // realizar um cálculo com as 4 operações básicas => gerar resultado exato         
+    let resultOne = operate(5, '+', 35); // partial result: 40 
+    let resultTwo = operate(resultOne, '-', 43); // partial result: -3 
+    let resultThree = operate(resultTwo, '/', 24); // partial result: -0.125
+    let resultFour = operate(resultThree, '*', resultThree); // final result: 0.015625
+    validateB = (resultFour === 0.015625);
+    resetTest();
+
+    // dividir um número muito pequeno com um número muito grande => gerar resultado com 10 casas decimais  => o operate é o responsável por arredondar o número
+    validateC = ((operate(3, '/', 9)).countDecimals() === 10);
+    resetTest();
+
+    // dividir por 0 => throw error no console para não dividir por 0 e chamar o clear;           
+    try {
+        (operate(3, '/', 0));
+    }
+    catch (e) {
+        validateD = true;
+    }
+    resetTest();
+
+    // chamar o operador + - / ou * sem número => throw error no console e chamar o clear               
+    try {
+        operate(3, '/', 0);
+    } catch (e) {
+        validateE = true;
+    }
+    resetTest();
+
+    // colocar o mesmo operador duas vezes => nada acontecer e manter o mesmo operador e número já colocado   
+    handleNumberInput(numberA);
+    handleOperationInput('+');
+    previousInput = '+'; // precisei setar previous input por fazer parte do handling de inputs repetidos
+    handleOperationInput('+');
+    validateF = ((operator === '+') && (!(TEST_clearWasCalled))); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
+    resetTest();
+
+    // colocar um operador seguido de outro operador (diferente do primeiro) => substituir o operador antigo pelo novo 
+    handleNumberInput(numberB);
+    handleOperationInput('+');
+    previousInput = '+';
+    handleOperationInput('-');
+    validateG = ((operator === '-') && (!(TEST_clearWasCalled))); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
+    resetTest();
+
+    // apertar o REMOVE depois de clicar no igual => verificar se foi removido o último digito do resultado               
+    handleNumberInput(9)/
+    handleNumberInput(2)/
+    handleCalculateButton();
+    previousInput = '=';
+    handleNumberRemove();
+    validateH = (currentNum === 9);
+    resetTest();
+
+    // apertar o = sem input algum => nada acontecer visualmente e throw error no console        
+    try {
+        handleOperationInput('=')
+    } catch (e) {
+        validateI = true;
+    }
+    resetTest();
+
+    // apertar o = com apenas um input => manter o mesmo número como resultado          
+    handleNumberInput(9);
+    handleNumberInput(2);
+    handleCalculateButton();
+    validateJ = (currentNum === 92);
+    resetTest();
+
+    // realizar alguma operação em cima de um resultado obtido => retornar o novo valor calculado
+    handleNumberInput(6);
+    handleOperationInput('+');
+    handleNumberInput(5);
+    handleCalculateButton();
+    previousInput = '=';
+    handleOperationInput('+');
+    handleNumberInput(4);
+    previousInput = 4;
+    handleCalculateButton();
+    let validateKSumResult = currentNum;
+    validateK = (validateKSumResult === (6 + 5 + 4));
+    resetTest();
 }
 
 const visorDisplay = document.querySelector('#visor');
@@ -166,118 +323,6 @@ input.forEach(element => {
 
 document.addEventListener('keydown', inputToValue)
 
-function inputToValue(event) {
-    let inputClass = null;
-    let input = null;
-    let inputStringToNumber = null;
+validateButton = document.querySelector(".validate-reliability")
 
-    if (event.type === "keydown") {
-        input = event.key;
-        inputStringToNumber = parseInt(input);
-    } else {
-        inputClass = event.target.className;
-        input = event.target.id;
-        inputStringToNumber = parseInt(input);
-    }
-
-    if (regexCaptureNumber.test(inputStringToNumber) || inputClass === "button-number") {
-        if (isNaN(inputStringToNumber)) {
-            throw new Error("Input not a number");
-        }
-        handleNumberInput(inputStringToNumber);
-
-    }
-    else if (regexCaptureOperation.test(input) || inputClass === "button-operation") {
-        handleOperationInput(input);
-    }
-    else if (inputClass === "button-calculate") {
-        handleCalculateButton(input);
-    } else {
-        switch (input) {
-            case '.':
-                handleNumberInput(input);
-                break;
-            case "Enter":
-            case '=':
-                handleCalculateButton('=');
-                break;
-            case "Backspace":
-                handleNumberRemove();
-                break;
-            case "Escape":
-                clear();
-                break;
-            default: handleError("Input not defined");
-        }
-    }
-    previousInput = input;
-}
-
-
-function validateReliability() {
-    // somar dois números pequenos => gerar resultado exato
-    let validateA = (operate(2, '+', 5) === 7);
-    resetTestClearFlag();
-
-    // realizar um cálculo com as 4 operações básicas => gerar resultado exato         
-    let resultOne = operate(2, '+', 35); // partial result: 40 
-    let resultTwo = operate(resultOne, '-', 43); // partial result: -3 
-    let resultThree = operate(resultTwo, '/', 53); // partial result: -0.0566037736 
-    let resultFour = operate(resultThree, '*', 7); // final result: -0.3962264151
-    let validateB = (resultFour === -0.3962264151);
-    resetTestClearFlag();
-
-    // dividir um número muito pequeno com um número muito grande => gerar resultado com 10 casas decimais  => o operate é o responsável por arredondar o número
-    let validateC = ((operate(3, '/', 9)).countDecimals() === 10);
-    resetTestClearFlag();
-
-    // dividir por 0 => throw error no console para não dividir por 0 e chamar o clear;           
-    (operate(3, '/', 0))
-    let validateD = TEST_clearWasCalled;
-    resetTestClearFlag();
-
-    // chamar o operador + - / ou * sem número => throw error no console e chamar o clear               
-    (handleOperationInput('+'));
-    let validateE = TEST_clearWasCalled;
-    resetTestClearFlag();
-
-    // colocar o mesmo operador duas vezes => nada acontecer e manter o mesmo operador e número já colocado   
-    document.getElementById('+').click(); // simulei um evento para atualizar o previousInput, que faz parte do handling de inputs repetidos
-    document.getElementById('+').click();
-    let validateF = ((operator === '+') && !(TEST_clearWasCalled)); // testa se o clear não foi chamado e se o operador corresponde com o selecionado
-    resetTestClearFlag();
-
-    // colocar um operador e seguido de outro operador (diferente do primeiro) => substituir o operador antigo pelo novo 
-    document.getElementById('+').click();
-    document.getElementById('-').click();
-    let validateG = (operator === '-'); // testa se o operador corresponde com o selecionado
-
-    // apertar o REMOVE depois de clicar no igual => chamar o clear()               
-    document.getElementById('=').click();
-    document.getElementById('delete').click();
-    let validateH = TEST_clearWasCalled;
-    resetTest();
-
-    // apertar o = sem input algum => nada acontecer e throw error no console        
-    document.getElementById('=').click();
-    let validateI = TEST_clearWasCalled;
-    resetTestClearFlag();
-
-    // apertar o = com apenas um input => manter o mesmo número como resultado          
-    document.getElementById('9').click();
-    document.getElementById('2').click();
-    document.getElementById('=').click();
-    let validateJ = (currentNum === 92);
-    resetTest();
-
-    // realizar alguma operação em cima de um resultado obtido => retornar o novo valor calculado
-    document.getElementById('9').click();
-    document.getElementById('2').click();
-    document.getElementById('=').click();
-    document.getElementById('+').click();
-    document.getElementById('5').click();
-    document.getElementById('=').click();
-    let validateK = (currentNum === 97);
-    resetTest();
-}
-
+validateButton.addEventListener('click', validateReliability);
